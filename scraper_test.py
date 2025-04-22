@@ -229,7 +229,7 @@ def get_news_data(method, start_date, end_date, keyword_query):
 
     if method == "BeautifulSoup":
         return scrape_with_bs4(base_url, headers)
-    elif method == "Selenium":
+    elif method == "Selenium-only for local use":
         return scrape_with_selenium(base_url)
     else:
         raise ValueError("Invalid method")
@@ -270,7 +270,7 @@ if menu == "Scrape":
         with col2:
             end_date = st.date_input("Tanggal akhir")
 
-        method = st.radio("Metode Scraping:", ["BeautifulSoup", "Selenium"])
+        method = st.radio("Metode Scraping:", ["BeautifulSoup", "Selenium-only for local use"])
         submitted = st.form_submit_button("Mulai Scrape")
 
     if submitted:
