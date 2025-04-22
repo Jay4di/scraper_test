@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import time
 import urllib.parse
+from urllib.parse import urlparse
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -10,7 +11,8 @@ import re
 import locale
 import random
 from streamlit_option_menu import option_menu
-#st.set_option('deprecation.showPyplotGlobalUse', False)
+
+
 
 
 # Optional: Selenium only if selected
@@ -120,7 +122,16 @@ def convert_relative_date(text):
 
     return text
 
-# ... (import dan fungsi lainnya tetap sama)
+# Fungsi untuk mengekstrak domain dari URL
+def extract_domain_from_url(url):
+    parsed_url = urlparse(url)
+    netloc = parsed_url.netloc
+    # Buang www. kalau ada, tapi simpan subdomain lainnya
+    if netloc.startswith("www."):
+        netloc = netloc[4:]
+    return netloc
+
+
 
 # Ubah fungsi scrape_with_bs4
 def scrape_with_bs4(base_url, headers=None):
@@ -141,7 +152,8 @@ def scrape_with_bs4(base_url, headers=None):
                     "Judul": el.select_one("div.MBeuO").get_text(),
                     "Snippet": el.select_one(".GI74Re").get_text(),
                     "Tanggal": convert_relative_date(el.select_one(".LfVVr").get_text()),
-                    "Sumber": el.select_one(".NUnG9d span").get_text()
+                    "Sumber": extract_domain_from_url(el.find("a")["href"])
+
                 })
                 results_on_page += 1
             except:
@@ -151,7 +163,7 @@ def scrape_with_bs4(base_url, headers=None):
             break
 
         page += 1
-        time.sleep(random.uniform(1.5, 3.0))  # Waktu tunggu lebih pendek, bisa disesuaikan
+        time.sleep(random.uniform(1.5, 20.0))  # Waktu tunggu lebih pendek, bisa disesuaikan
 
     return news_results
 
@@ -167,7 +179,7 @@ def scrape_with_selenium(base_url):
         start = page * 10
         url = f"{base_url}&start={start}"
         driver.get(url)
-        time.sleep(random.uniform(1.5, 3.0))
+        time.sleep(random.uniform(1.5, 20.0))
 
         elements = driver.find_elements(By.CSS_SELECTOR, "div.SoaBEf")
         if not elements:
@@ -186,7 +198,8 @@ def scrape_with_selenium(base_url):
                     "Judul": title,
                     "Snippet": snippet,
                     "Tanggal": date,
-                    "Sumber": source
+                    "Sumber": extract_domain_from_url(el.find_element(By.TAG_NAME, "a").get_attribute("href"))
+
                 })
             except:
                 continue
@@ -195,6 +208,7 @@ def scrape_with_selenium(base_url):
 
     driver.quit()
     return news_results
+
 
 # Ubah get_news_data untuk menghapus max_pages
 def get_news_data(method, start_date, end_date, keyword_query):
